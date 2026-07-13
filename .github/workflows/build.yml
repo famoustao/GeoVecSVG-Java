@@ -1,0 +1,123 @@
+name: Build GeoVecSVG
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build & Package
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoVecSVG-jar
+          path: target/GeoVecSVG-*.jar
+
+  build-linux:
+    name: Build on Linux
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Create Linux App Package
+        run: |
+          mkdir -p dist/linux
+          cp target/GeoVecSVG-*.jar dist/linux/GeoVecSVG.jar
+          echo '#!/bin/bash' > dist/linux/run.sh
+          echo 'java -jar "$(dirname "$0")/GeoVecSVG.jar"' >> dist/linux/run.sh
+          chmod +x dist/linux/run.sh
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoVecSVG-linux
+          path: dist/linux/
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-2022
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Create Windows Package
+        shell: cmd
+        run: |
+          mkdir dist\windows
+          copy target\GeoVecSVG-*.jar dist\windows\GeoVecSVG.jar
+          echo @echo off > dist\windows\run.bat
+          echo start javaw -jar "%~dp0GeoVecSVG.jar" >> dist\windows\run.bat
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoVecSVG-windows
+          path: dist/windows/
+
+  build-macos:
+    name: Build on macOS
+    runs-on: macos-14
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Create macOS App Package
+        run: |
+          mkdir -p dist/macos
+          cp target/GeoVecSVG-*.jar dist/macos/GeoVecSVG.jar
+          echo '#!/bin/bash' > dist/macos/run.sh
+          echo 'java -jar "$(dirname "$0")/GeoVecSVG.jar"' >> dist/macos/run.sh
+          chmod +x dist/macos/run.sh
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoVecSVG-macos
+          path: dist/macos/

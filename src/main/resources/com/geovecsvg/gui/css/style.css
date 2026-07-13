@@ -1,0 +1,313 @@
+/* ===== GeoVecSVG 现代风格主题 ===== */
+
+* {
+    -fx-font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.root {
+    -fx-background-color: #f8fafc;
+}
+
+/* ===== 左侧控制面板 ===== */
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 0 12 12 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 10, 0, 2, 0);
+    -fx-padding: 20 16 20 16;
+    -fx-spacing: 16;
+}
+
+/* 标题 */
+.app-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0f172a;
+    -fx-padding: 0 0 4 0;
+}
+
+.app-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-padding: 0 0 8 0;
+}
+
+/* 分组标题 */
+.section-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #334155;
+    -fx-padding: 12 0 6 0;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* 标签 */
+.control-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-font-weight: 500;
+}
+
+.control-value {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+}
+
+/* Slider 样式 */
+.slider .track {
+    -fx-background-color: #e2e8f0;
+    -fx-background-radius: 4;
+    -fx-pref-height: 4;
+}
+
+.slider .thumb {
+    -fx-background-color: #3b82f6;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+    -fx-background-radius: 7;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 4, 0, 0, 1);
+}
+
+.slider .thumb:hover {
+    -fx-background-color: #2563eb;
+}
+
+/* Spinner */
+.spinner {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 6;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 6;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: transparent;
+}
+
+.spinner .increment-arrow-button:hover,
+.spinner .decrement-arrow-button:hover {
+    -fx-background-color: #e2e8f0;
+}
+
+/* CheckBox */
+.check-box {
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+}
+
+.check-box .box {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 4;
+    -fx-border-color: #cbd5e1;
+    -fx-border-radius: 4;
+    -fx-pref-width: 16;
+    -fx-pref-height: 16;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #3b82f6;
+    -fx-border-color: #3b82f6;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+
+/* 按钮 */
+.btn-primary {
+    -fx-background-color: linear-gradient(135deg, #3b82f6, #2563eb);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.3), 8, 0, 0, 2);
+}
+
+.btn-primary:hover {
+    -fx-background-color: linear-gradient(135deg, #2563eb, #1d4ed8);
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 12, 0, 0, 3);
+}
+
+.btn-primary:pressed {
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.2), 4, 0, 0, 1);
+}
+
+.btn-secondary {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #334155;
+    -fx-font-weight: 500;
+    -fx-font-size: 12px;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #e2e8f0;
+}
+
+.btn-success {
+    -fx-background-color: linear-gradient(135deg, #10b981, #059669);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(16, 185, 129, 0.3), 8, 0, 0, 2);
+}
+
+.btn-success:hover {
+    -fx-background-color: linear-gradient(135deg, #059669, #047857);
+}
+
+.btn-warning {
+    -fx-background-color: linear-gradient(135deg, #f59e0b, #d97706);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* ===== 右侧画布区域 ===== */
+.canvas-container {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 12;
+}
+
+.canvas-toolbar {
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+    -fx-spacing: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 6, 0, 0, 2);
+}
+
+/* 状态条 */
+.status-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 16 6 16;
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748b;
+}
+
+.status-indicator {
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+}
+
+.status-indicator.ready {
+    -fx-text-fill: #10b981;
+}
+
+.status-indicator.processing {
+    -fx-text-fill: #f59e0b;
+}
+
+.status-indicator.error {
+    -fx-text-fill: #ef4444;
+}
+
+/* 统计卡片 */
+.stats-card {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-padding: 10 12 10 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+}
+
+.stats-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0f172a;
+}
+
+.stats-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #64748b;
+}
+
+/* 分隔线 */
+.separator {
+    -fx-padding: 8 0 8 0;
+}
+
+/* 滚动条样式 */
+.scroll-bar:vertical {
+    -fx-pref-width: 6;
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #cbd5e1;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #94a3b8;
+}
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 6;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 6;
+    -fx-font-size: 12px;
+}
+
+.combo-box .list-cell {
+    -fx-padding: 4 8 4 8;
+}
+
+/* Toggle */
+.toggle-button {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 11px;
+    -fx-background-radius: 6;
+    -fx-padding: 5 10 5 10;
+}
+
+.toggle-button:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+}
+
+/* 进度条 */
+.progress-bar {
+    -fx-background-color: #e2e8f0;
+    -fx-background-radius: 4;
+    -fx-pref-height: 6;
+}
+
+.progress-bar .bar {
+    -fx-background-color: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
