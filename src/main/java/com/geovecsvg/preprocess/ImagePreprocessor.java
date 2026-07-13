@@ -57,11 +57,28 @@ public class ImagePreprocessor {
         Mat hsv = new Mat();
         cvtColor(colorImage, hsv, COLOR_BGR2HSV);
 
-        Mat mask = new Mat();
-        // JavaCPP inRange 需要 Scalar 的参数顺序匹配通道数
-        Scalar lower = new Scalar(params.fillHueMin, params.fillSatMin, params.fillValMin, 0);
-        Scalar upper = new Scalar(params.fillHueMax, 255, 255, 0);
-        inRange(hsv, lower, upper, mask);
+        Mat mask = Mat.zeros(hsv.rows(), hsv.cols(), CV_8UC1).asMat();
+        // 手动 HSV 颜色范围筛选
+        byte[] hsvData = new byte[hsv.rows() * hsv.cols() * hsv.channels()];
+        hsv.data().get(hsvData);
+        byte[] maskData = new byte[hsv.rows() * hsv.cols()];
+
+        int hMin = params.fillHueMin;
+        int hMax = params.fillHueMax;
+        int sMin = params.fillSatMin;
+        int vMin = params.fillValMin;
+
+        int idx = 0;
+        for (int i = 0; i < maskData.length; i++) {
+            int h = hsvData[idx] & 0xFF;
+            int s = hsvData[idx + 1] & 0xFF;
+            int v = hsvData[idx + 2] & 0xFF;
+            if (h >= hMin && h <= hMax && s >= sMin && v >= vMin) {
+                maskData[i] = (byte) 255;
+            }
+            idx += 3;
+        }
+        mask.data().put(maskData);
 
         // 形态学操作
         Mat kernel = getStructuringElement(MORPH_ELLIPSE, new Size(5, 5));
