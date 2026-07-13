@@ -17,7 +17,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
-        <opencv.version>4.8.0-1.5.10</opencv.version>
+        <opencv.version>4.9.0-1.5.10</opencv.version>
     </properties>
 
     <dependencies>
