@@ -22,9 +22,8 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.global.opencv_core;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-import org.bytedeco.opencv.global.opencv_imgproc;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,7 +31,6 @@ import java.nio.file.Paths;
 
 /**
  * GeoVecSVG JavaFX 主界面
- * 现代风格，左侧控制面板 + 右侧画布预览
  */
 public class MainApp extends Application {
 
@@ -60,15 +58,12 @@ public class MainApp extends Application {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // 左侧控制面板
         VBox sidebar = createSidebar();
         root.setLeft(sidebar);
 
-        // 右侧画布区域
         BorderPane canvasArea = createCanvasArea();
         root.setCenter(canvasArea);
 
-        // 底部状态栏
         HBox statusBar = createStatusBar();
         root.setBottom(statusBar);
 
@@ -82,17 +77,9 @@ public class MainApp extends Application {
     }
 
     private VBox createSidebar() {
-        VBox sidebar = new VBox();
-        sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(320);
-
-        ScrollPane scrollPane = new ScrollPane(sidebar);
-        scrollPane.setFitToWidth(true);
-        scrollPane.getStyleClass().add("scroll-pane");
-
         VBox content = new VBox();
         content.setSpacing(4);
-        content.setPadding(new Insets(0, 4, 0, 0));
+        content.setPadding(new Insets(16, 12, 20, 16));
 
         // 标题
         Label title = new Label("GeoVecSVG");
@@ -100,7 +87,7 @@ public class MainApp extends Application {
         Label subtitle = new Label("几何题图精确矢量化工具");
         subtitle.getStyleClass().add("app-subtitle");
 
-        // 文件操作按钮
+        // 操作按钮
         HBox btnRow1 = new HBox(8);
         Button openBtn = new Button("打开图片");
         openBtn.getStyleClass().add("btn-primary");
@@ -133,90 +120,74 @@ public class MainApp extends Application {
         // 统计卡片
         HBox statsRow = new HBox(8);
         statsRow.getStyleClass().add("stats-card");
-        statsRow.setPadding(new Insets(10, 12, 10, 12));
-
         VBox lineStat = createStatCard("线段", "0");
         VBox circleStat = createStatCard("圆", "0");
         VBox vertexStat = createStatCard("顶点", "0");
         VBox fillStat = createStatCard("区域", "0");
-
         lineCountLabel = (Label) lineStat.getChildren().get(0);
         circleCountLabel = (Label) circleStat.getChildren().get(0);
         vertexCountLabel = (Label) vertexStat.getChildren().get(0);
         fillCountLabel = (Label) fillStat.getChildren().get(0);
-
         statsRow.getChildren().addAll(lineStat, circleStat, vertexStat, fillStat);
 
         content.getChildren().addAll(title, subtitle, btnRow1, btnRow2, statsRow);
 
-        // === 预处理参数
+        // 预处理参数
         Label sec1 = new Label("图像预处理");
         sec1.getStyleClass().add("section-title");
-
-        Slider denoiseSlider = createSlider("去噪强度", 1, 9, params.denoiseSize,
+        SliderControl denoiseSlider = new SliderControl("去噪强度", 1, 9, params.denoiseSize, "%.0f",
                 v -> params.denoiseSize = v.intValue());
-        Slider morphSlider = createSlider("形态学闭运算", 1, 8, (int)params.morphCloseSize,
+        SliderControl morphSlider = new SliderControl("形态学闭运算", 1, 8, params.morphCloseSize, "%.0f",
                 v -> params.morphCloseSize = v);
-
         CheckBox fillCheck = new CheckBox("检测填充区域");
         fillCheck.setSelected(params.detectFilledRegions);
         fillCheck.getStyleClass().add("check-box");
         fillCheck.selectedProperty().addListener((obs, o, n) -> params.detectFilledRegions = n);
-
         content.getChildren().addAll(sec1, denoiseSlider, morphSlider, fillCheck);
 
-        // === 直线检测参数
+        // 直线检测参数
         Label sec2 = new Label("直线检测");
         sec2.getStyleClass().add("section-title");
-
-        Slider houghThreshSlider = createSlider("霍夫阈值", 20, 200, params.houghThreshold,
+        SliderControl houghThresh = new SliderControl("霍夫阈值", 20, 200, params.houghThreshold, "%.0f",
                 v -> params.houghThreshold = v.intValue());
-        Slider minLenSlider = createSlider("最小线长", 10, 200, (int)params.minLineLength,
+        SliderControl minLen = new SliderControl("最小线长", 10, 200, params.minLineLength, "%.0f",
                 v -> params.minLineLength = v);
-        Slider maxGapSlider = createSlider("最大间隙", 1, 50, (int)params.maxLineGap,
+        SliderControl maxGap = new SliderControl("最大间隙", 1, 50, params.maxLineGap, "%.0f",
                 v -> params.maxLineGap = v);
+        content.getChildren().addAll(sec2, houghThresh, minLen, maxGap);
 
-        content.getChildren().addAll(sec2, houghThreshSlider, minLenSlider, maxGapSlider);
-
-        // === 圆检测参数
+        // 圆检测参数
         Label sec3 = new Label("圆检测");
         sec3.getStyleClass().add("section-title");
-
-        Slider circParamSlider = createSlider("圆检测阈值", 10, 80, (int)params.houghCircParam2,
+        SliderControl circParam = new SliderControl("圆检测阈值", 10, 80, params.houghCircParam2, "%.0f",
                 v -> params.houghCircParam2 = v);
-        Slider minRadiusSlider = createSlider("最小半径", 2, 50, params.minCircleRadius,
+        SliderControl minRadius = new SliderControl("最小半径", 2, 50, params.minCircleRadius, "%.0f",
                 v -> params.minCircleRadius = v.intValue());
-        Slider maxRadiusSlider = createSlider("最大半径", 20, 300, params.maxCircleRadius,
+        SliderControl maxRadius = new SliderControl("最大半径", 20, 300, params.maxCircleRadius, "%.0f",
                 v -> params.maxCircleRadius = v.intValue());
+        content.getChildren().addAll(sec3, circParam, minRadius, maxRadius);
 
-        content.getChildren().addAll(sec3, circParamSlider, minRadiusSlider, maxRadiusSlider);
-
-        // === 约束优化参数
+        // 约束优化参数
         Label sec4 = new Label("几何约束优化");
         sec4.getStyleClass().add("section-title");
-
         CheckBox optCheck = new CheckBox("启用约束优化");
         optCheck.setSelected(params.enableOptimization);
         optCheck.getStyleClass().add("check-box");
         optCheck.selectedProperty().addListener((obs, o, n) -> params.enableOptimization = n);
-
         CheckBox hvCheck = new CheckBox("强制水平/垂直");
         hvCheck.setSelected(params.enforceHorizontalVertical);
         hvCheck.getStyleClass().add("check-box");
         hvCheck.selectedProperty().addListener((obs, o, n) -> params.enforceHorizontalVertical = n);
-
-        Slider snapSlider = createSlider("吸附距离 (px)", 1, 10, (int)params.snapDistance,
+        SliderControl snapDist = new SliderControl("吸附距离 (px)", 1, 10, params.snapDistance, "%.0f",
                 v -> params.snapDistance = v);
-        Slider angleSlider = createSlider("角度容差 (°)", 0.5, 5.0, params.angleToleranceDeg,
+        SliderControl angleTol = new SliderControl("角度容差 (°)", 0.5, 5.0, params.angleToleranceDeg, "%.1f",
                 v -> params.angleToleranceDeg = v);
-        Slider iterSlider = createSlider("优化迭代次数", 5, 50, params.optimizationIterations,
+        SliderControl iterations = new SliderControl("优化迭代次数", 5, 50, params.optimizationIterations, "%.0f",
                 v -> params.optimizationIterations = v.intValue());
+        content.getChildren().addAll(sec4, optCheck, hvCheck, snapDist, angleTol, iterations);
 
-        content.getChildren().addAll(sec4, optCheck, hvCheck, snapSlider, angleSlider, iterSlider);
-
-        VBox wrapper = new VBox(content);
-        wrapper.setPadding(new Insets(16, 12, 20, 4));
-        ScrollPane sp = new ScrollPane(wrapper);
+        // 包装在滚动面板中
+        ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true);
         sp.getStyleClass().add("scroll-pane");
         sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -236,34 +207,6 @@ public class MainApp extends Application {
         Label lblLabel = new Label(label);
         lblLabel.getStyleClass().add("stats-label");
         box.getChildren().addAll(valLabel, lblLabel);
-        return box;
-    }
-
-    private VBox createSlider(String labelText, double min, double max, double initialValue,
-                             java.util.function.Consumer<Double> onChange) {
-        VBox box = new VBox(4);
-        box.setPadding(new Insets(4, 0, 4, 0));
-
-        HBox header = new HBox();
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label label = new Label(labelText);
-        label.getStyleClass().add("control-label");
-        Label valueLabel = new Label(String.format("%.0f", initialValue));
-        valueLabel.getStyleClass().add("control-value");
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        header.getChildren().addAll(label, spacer, valueLabel);
-
-        Slider slider = new Slider(min, max, initialValue);
-        slider.setMajorTickUnit((max - min) / 4);
-        slider.setMinorTickCount(4);
-        slider.valueProperty().addListener((obs, o, n) -> {
-            double v = n.doubleValue();
-            valueLabel.setText(String.format("%.1f", v));
-            onChange.accept(v);
-        });
-
-        box.getChildren().addAll(header, slider);
         return box;
     }
 
@@ -365,9 +308,9 @@ public class MainApp extends Application {
         if (file == null) return;
 
         try {
-            currentImage = opencv_imgcodecs.imread(file.getAbsolutePath());
+            currentImage = imread(file.getAbsolutePath());
             if (currentImage.empty()) {
-                updateStatus("无法加载图片失败", "error");
+                updateStatus("无法加载图片", "error");
                 return;
             }
             currentResult = null;
@@ -377,6 +320,7 @@ public class MainApp extends Application {
             fitToWindow();
         } catch (Exception ex) {
             updateStatus("加载失败: " + ex.getMessage(), "error");
+            ex.printStackTrace();
         }
     }
 
@@ -441,7 +385,6 @@ public class MainApp extends Application {
         } else {
             previewCanvas.setVisible(true);
             originalImageView.setVisible(false);
-            // 清空画布
             GraphicsContext gc = previewCanvas.getGraphicsContext2D();
             gc.setFill(Color.web("#f1f5f9"));
             gc.fillRect(0, 0, previewCanvas.getWidth(), previewCanvas.getHeight());
@@ -509,8 +452,12 @@ public class MainApp extends Application {
         double iw = currentResult != null ? currentResult.imageWidth : currentImage.cols();
         double ih = currentResult != null ? currentResult.imageHeight : currentImage.rows();
 
-        double cw = previewCanvas.getParent().getLayoutBounds().getWidth() - 60;
-        double ch = previewCanvas.getParent().getLayoutBounds().getHeight() - 60;
+        double cw = 800;
+        double ch = 500;
+        if (previewCanvas.getParent() != null) {
+            cw = previewCanvas.getParent().getLayoutBounds().getWidth() - 60;
+            ch = previewCanvas.getParent().getLayoutBounds().getHeight() - 60;
+        }
         if (cw <= 0 || ch <= 0) { cw = 800; ch = 500; }
 
         zoomLevel = Math.min(cw / iw, ch / ih);
@@ -571,9 +518,9 @@ public class MainApp extends Application {
     private Image matToImage(Mat mat) {
         Mat rgb = new Mat();
         if (mat.channels() == 1) {
-            opencv_imgproc.cvtColor(mat, rgb, opencv_imgproc.COLOR_GRAY2BGR);
+            cvtColor(mat, rgb, COLOR_GRAY2BGR);
         } else {
-            opencv_imgproc.cvtColor(mat, rgb, opencv_imgproc.COLOR_BGR2RGB);
+            cvtColor(mat, rgb, COLOR_BGR2RGB);
         }
 
         int w = rgb.cols();

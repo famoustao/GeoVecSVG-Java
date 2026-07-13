@@ -1,5 +1,6 @@
 package com.geovecsvg.optimization;
 
+import com.geovecsvg.detection.PrimitiveDetector;
 import com.geovecsvg.model.*;
 import java.util.*;
 
