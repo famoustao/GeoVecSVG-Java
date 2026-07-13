@@ -239,9 +239,13 @@ public class PrimitiveDetector {
 
             List<Point2D> pts = new ArrayList<>();
             int rows = approx.rows();
+            // approx 是 CV_32SC2 类型，即每行两个int
+            int[] approxData = new int[rows * 2];
+            approx.data().asBuffer().asIntBuffer().get(approxData);
+
             for (int j = 0; j < rows; j++) {
-                int x = approx.ptr(j).getInt(0 * 2);
-                int y = approx.ptr(j).getInt(1 * 2);
+                int x = approxData[j * 2];
+                int y = approxData[j * 2 + 1];
                 pts.add(new Point2D(x, y));
             }
 

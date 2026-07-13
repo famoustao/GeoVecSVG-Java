@@ -57,11 +57,14 @@ public class ImagePreprocessor {
         Mat hsv = new Mat();
         cvtColor(colorImage, hsv, COLOR_BGR2HSV);
 
-        Mat mask = Mat.zeros(hsv.rows(), hsv.cols(), CV_8UC1).asMat();
+        int rows = hsv.rows();
+        int cols = hsv.cols();
+        Mat mask = new Mat(rows, cols, CV_8UC1, new Scalar(0));
+
         // 手动 HSV 颜色范围筛选
-        byte[] hsvData = new byte[hsv.rows() * hsv.cols() * hsv.channels()];
+        byte[] hsvData = new byte[rows * cols * hsv.channels()];
         hsv.data().get(hsvData);
-        byte[] maskData = new byte[hsv.rows() * hsv.cols()];
+        byte[] maskData = new byte[rows * cols];
 
         int hMin = params.fillHueMin;
         int hMax = params.fillHueMax;
@@ -93,30 +96,37 @@ public class ImagePreprocessor {
      * 检测文字区域（通过连通域分析）
      */
     public static Mat detectTextRegions(Mat binary) {
+        int rows = binary.rows();
+        int cols = binary.cols();
+        Mat textMask = new Mat(rows, cols, CV_8UC1, new Scalar(0));
+
         Mat labels = new Mat();
         Mat stats = new Mat();
         Mat centroids = new Mat();
         connectedComponentsWithStats(binary, labels, stats, centroids);
 
-        Mat textMask = Mat.zeros(binary.rows(), binary.cols(), CV_8UC1).asMat();
-
         int numLabels = stats.rows();
+        // stats 是 CV_32S 类型，每行5个值: x, y, w, h, area
+        int[] statsData = new int[numLabels * 5];
+        stats.data().asBuffer().asIntBuffer().get(statsData);
+
         for (int i = 1; i < numLabels; i++) {
-            int x = stats.ptr(i).getInt(0 * 4);
-            int y = stats.ptr(i).getInt(1 * 4);
-            int w = stats.ptr(i).getInt(2 * 4);
-            int h = stats.ptr(i).getInt(3 * 4);
-            int area = stats.ptr(i).getInt(4 * 4);
+            int base = i * 5;
+            int x = statsData[base];
+            int y = statsData[base + 1];
+            int w = statsData[base + 2];
+            int h = statsData[base + 3];
+            int area = statsData[base + 4];
 
             double aspect = (double) w / h;
             if (area > 20 && area < 500 && aspect > 0.2 && aspect < 5.0) {
                 int pad = 2;
                 int x1 = Math.max(0, x - pad);
                 int y1 = Math.max(0, y - pad);
-                int x2 = Math.min(binary.cols() - 1, x + w + pad);
-                int y2 = Math.min(binary.rows() - 1, y + h + pad);
+                int x2 = Math.min(cols - 1, x + w + pad);
+                int y2 = Math.min(rows - 1, y + h + pad);
                 rectangle(textMask, new Point(x1, y1), new Point(x2, y2),
-                        new Scalar(255, 0, 0, 0), FILLED, 8, 0);
+                        new Scalar(255, 0, 0, 0), -1, 8, 0);
             }
         }
 
@@ -131,14 +141,21 @@ public class ImagePreprocessor {
      */
     public static Mat removeText(Mat binary, Mat textMask) {
         Mat result = binary.clone();
-        // 将文字区域设为 0
-        for (int y = 0; y < result.rows(); y++) {
-            for (int x = 0; x < result.cols(); x++) {
-                if (textMask.ptr(y, x).get() != 0) {
-                    result.ptr(y, x).put((byte) 0);
-                }
+        int rows = result.rows();
+        int cols = result.cols();
+
+        byte[] resultData = new byte[rows * cols];
+        byte[] maskData = new byte[rows * cols];
+        result.data().get(resultData);
+        textMask.data().get(maskData);
+
+        for (int i = 0; i < resultData.length; i++) {
+            if (maskData[i] != 0) {
+                resultData[i] = 0;
             }
         }
+        result.data().put(resultData);
+
         return result;
     }
 
