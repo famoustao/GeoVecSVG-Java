@@ -5,10 +5,11 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Build & Package
+  build-jar:
+    name: Compile & Package
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -23,16 +24,17 @@ jobs:
       - name: Build with Maven
         run: mvn -B package -DskipTests
 
-      - name: Upload build artifact
+      - name: Upload jar artifact
         uses: actions/upload-artifact@v4
         with:
           name: GeoVecSVG-jar
-          path: target/GeoVecSVG-*.jar
+          path: target/GeoVecSVG-1.0.0.jar
+          retention-days: 7
 
-  build-linux:
-    name: Build on Linux
-    runs-on: ubuntu-22.04
-    needs: build
+  package-windows-exe:
+    name: Package Windows EXE
+    runs-on: windows-2022
+    needs: build-jar
     steps:
       - uses: actions/checkout@v4
 
@@ -46,55 +48,80 @@ jobs:
       - name: Build with Maven
         run: mvn -B package -DskipTests
 
-      - name: Create Linux App Package
+      - name: Package as EXE with jpackage
+        shell: pwsh
         run: |
-          mkdir -p dist/linux
-          cp target/GeoVecSVG-*.jar dist/linux/GeoVecSVG.jar
-          echo '#!/bin/bash' > dist/linux/run.sh
-          echo 'java -jar "$(dirname "$0")/GeoVecSVG.jar"' >> dist/linux/run.sh
-          chmod +x dist/linux/run.sh
+          New-Item -ItemType Directory -Force -Path dist
+          jpackage `
+            --name GeoVecSVG `
+            --type exe `
+            --input target `
+            --main-jar GeoVecSVG-1.0.0.jar `
+            --main-class com.geovecsvg.gui.MainApp `
+            --win-shortcut `
+            --win-menu `
+            --win-menu-group "GeoVecSVG" `
+            --description "几何题图精确矢量化工具" `
+            --vendor "GeoVecSVG" `
+            --app-version "1.0.0" `
+            --dest dist
 
-      - name: Upload Linux artifact
+      - name: List output
+        shell: pwsh
+        run: Get-ChildItem -Recurse dist
+
+      - name: Upload Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoVecSVG-windows-exe
+          path: dist/*.exe
+          retention-days: 30
+
+  package-linux:
+    name: Package Linux AppImage
+    runs-on: ubuntu-22.04
+    needs: build-jar
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Package as app-image with jpackage
+        run: |
+          mkdir -p dist
+          jpackage \
+            --name GeoVecSVG \
+            --type app-image \
+            --input target \
+            --main-jar GeoVecSVG-1.0.0.jar \
+            --main-class com.geovecsvg.gui.MainApp \
+            --description "几何题图精确矢量化工具" \
+            --vendor "GeoVecSVG" \
+            --app-version "1.0.0" \
+            --dest dist
+
+          # Tar it for upload
+          cd dist && tar czf ../GeoVecSVG-linux.tar.gz GeoVecSVG
+
+      - name: Upload Linux Package
         uses: actions/upload-artifact@v4
         with:
           name: GeoVecSVG-linux
-          path: dist/linux/
+          path: GeoVecSVG-linux.tar.gz
+          retention-days: 30
 
-  build-windows:
-    name: Build on Windows
-    runs-on: windows-2022
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Build with Maven
-        run: mvn -B package -DskipTests
-
-      - name: Create Windows Package
-        shell: cmd
-        run: |
-          mkdir dist\windows
-          copy target\GeoVecSVG-*.jar dist\windows\GeoVecSVG.jar
-          echo @echo off > dist\windows\run.bat
-          echo start javaw -jar "%~dp0GeoVecSVG.jar" >> dist\windows\run.bat
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: GeoVecSVG-windows
-          path: dist/windows/
-
-  build-macos:
-    name: Build on macOS
+  package-macos:
+    name: Package macOS DMG
     runs-on: macos-14
-    needs: build
+    needs: build-jar
     steps:
       - uses: actions/checkout@v4
 
@@ -108,16 +135,23 @@ jobs:
       - name: Build with Maven
         run: mvn -B package -DskipTests
 
-      - name: Create macOS App Package
+      - name: Package as DMG with jpackage
         run: |
-          mkdir -p dist/macos
-          cp target/GeoVecSVG-*.jar dist/macos/GeoVecSVG.jar
-          echo '#!/bin/bash' > dist/macos/run.sh
-          echo 'java -jar "$(dirname "$0")/GeoVecSVG.jar"' >> dist/macos/run.sh
-          chmod +x dist/macos/run.sh
+          mkdir -p dist
+          jpackage \
+            --name GeoVecSVG \
+            --type dmg \
+            --input target \
+            --main-jar GeoVecSVG-1.0.0.jar \
+            --main-class com.geovecsvg.gui.MainApp \
+            --description "几何题图精确矢量化工具" \
+            --vendor "GeoVecSVG" \
+            --app-version "1.0.0" \
+            --dest dist
 
-      - name: Upload macOS artifact
+      - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
           name: GeoVecSVG-macos
-          path: dist/macos/
+          path: dist/*.dmg
+          retention-days: 30
